@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BossX - Masternode Platform</title>
+<style>
+/* ==================== BASE & LAYOUT ==================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, sans-serif; display: flex; min-height: 100vh; background-color: #0a1628; color: #fff; }
+
+/* Sidebar */
+.sidebar { width: 250px; background-color: #2c3e50; display: flex; flex-direction: column; transition: width 0.3s ease; overflow: hidden; border-right: 1px solid #34495e; flex-shrink: 0; }
+.sidebar.collapsed { width: 70px; }
+.sidebar .logo { padding: 20px 15px; border-bottom: 1px solid #34495e; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+.sidebar.collapsed .logo { justify-content: center; padding: 20px 10px; }
+.sidebar .logo-img { width: 55px; height: 55px; object-fit: contain; flex-shrink: 0; }
+.logo-text { display: flex; flex-direction: column; }
+.brand-name { font-size: 26px; font-weight: bold; }
+.brand-subtitle { font-size: 14px; color: #bdc3c7; margin-top: 2px; }
+.sidebar.collapsed .logo-text { display: none; }
+.sidebar .menu { list-style: none; padding: 10px 0; }
+.sidebar .menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #ecf0f1; text-decoration: none; transition: background 0.3s; white-space: nowrap; }
+.sidebar.collapsed .menu li a { justify-content: center; padding: 12px 10px; }
+.sidebar .menu li a:hover { background-color: #34495e; }
+.sidebar .menu li a.active { background-color: #34495e; border-left: 3px solid #00e5ff; }
+.sidebar .menu li a .menu-icon { flex-shrink: 0; }
+.sidebar .menu li a .menu-icon svg { width: 22px; height: 22px; fill: #f39c12; }
+.sidebar.collapsed .menu-text { display: none; }
+
+/* Main & Header */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.header { background-color: #0a1628; padding: 0 25px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1a3a5c; height: 85px; gap: 20px; flex-shrink: 0; }
+.header-left { display: flex; align-items: center; gap: 15px; min-width: 180px; }
+.toggle-btn { background: none; border: none; color: #fff; font-size: 26px; cursor: pointer; width: 40px; height: 40px; border-radius: 4px; transition: background 0.3s; display: flex; align-items: center; justify-content: center; }
+.toggle-btn:hover { background-color: rgba(255, 255, 255, 0.1); }
+.clock-container { display: flex; flex-direction: column; }
+.clock-time { font-size: 22px; font-weight: bold; color: #00e5ff; letter-spacing: 1px; }
+.clock-date { font-size: 13px; color: #b0bec5; margin-top: 2px; }
+.header-center { flex: 1; max-width: 500px; display: flex; justify-content: center; }
+.search-bar { display: flex; align-items: center; background-color: #0d2137; border: 1px solid #1a5276; border-radius: 8px; padding: 10px 15px; width: 100%; gap: 10px; }
+.search-bar svg { width: 18px; height: 18px; fill: #00e5ff; flex-shrink: 0; }
+.search-bar input { background: transparent; border: none; outline: none; color: #fff; font-size: 14px; width: 100%; }
+.search-bar input::placeholder { color: #78909c; }
+.header-right { display: flex; align-items: center; gap: 15px; min-width: 320px; justify-content: flex-end; }
+.market-btn { display: flex; align-items: center; gap: 8px; background-color: transparent; border: 1px solid #2ecc71; color: #2ecc71; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+.market-btn:hover { background-color: rgba(46, 204, 113, 0.1); }
+.market-btn svg { width: 16px; height: 16px; fill: #2ecc71; }
+.notif-btn { position: relative; background: none; border: none; cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; }
+.notif-btn svg { width: 22px; height: 22px; fill: #fff; }
+.notif-badge { position: absolute; top: 2px; right: 2px; background-color: #e74c3c; color: #fff; font-size: 10px; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.profile { display: flex; align-items: center; gap: 10px; background-color: #0d2137; border: 1px solid #1a5276; border-radius: 8px; padding: 6px 12px 6px 6px; cursor: pointer; }
+.profile-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background-color: #1a5276; }
+.profile-info { display: flex; flex-direction: column; }
+.profile-name { font-size: 14px; font-weight: bold; }
+.profile-role { font-size: 11px; color: #00e5ff; }
+.content { flex: 1; padding: 20px; overflow-y: auto; }
+
+/* ========================================= */
+/* CSS BARU: BOSSX SMART BROADCAST TICKER */
+/* ========================================= */
+.bossx-ticker {
+    position: relative;
+    width: 100%;
+    height: 58px;
+    background: linear-gradient(135deg, rgba(13, 33, 55, 0.85) 0%, rgba(5, 20, 40, 0.95) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(0, 229, 255, 0.4);
+    border-bottom: 1px solid rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.15), inset 0 0 20px rgba(0, 229, 255, 0.05);
+    margin-bottom: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+.ticker-label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 18px 0 15px;
+    background: linear-gradient(90deg, rgba(0, 229, 255, 0.15) 0%, rgba(0, 229, 255, 0.05) 70%, transparent 100%);
+    z-index: 5;
+    font-size: 12px;
+    font-weight: bold;
+    color: #00e5ff;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-right: 1px solid rgba(0, 229, 255, 0.2);
+}
+
+.ticker-icon {
+    width: 20px;
+    height: 20px;
+    fill: #00e5ff;
+    animation: pulse-icon 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.6));
+}
+
+@keyframes pulse-icon {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+.ticker-content {
+    flex: 1;
+    overflow: hidden;
+    margin-left: 180px;
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.ticker-track {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    animation: ticker-scroll 45s linear infinite;
+    will-change: transform;
+}
+
+.ticker-content:hover .ticker-track {
+    animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.ticker-message {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 25px;
+    font-size: 14px;
+    font-weight: 500;
+    background: linear-gradient(90deg, #ffffff 0%, #00e5ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.3px;
+}
+
+.ticker-message strong {
+    color: #00ff88;
+    -webkit-text-fill-color: #00ff88;
+    font-weight: bold;
+    margin: 0 4px;
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+}
+
+.ticker-separator {
+    color: rgba(0, 229, 255, 0.6);
+    font-size: 18px;
+    margin: 0 5px;
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+
+/* Fade edges untuk tampilan lebih halus */
+.ticker-content::before,
+.ticker-content::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 60px;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.ticker-content::before {
+    left: 0;
+    background: linear-gradient(90deg, rgba(13, 33, 55, 0.9) 0%, transparent 100%);
+}
+
+.ticker-content::after {
+    right: 0;
+    background: linear-gradient(-90deg, rgba(13, 33, 55, 0.9) 0%, transparent 100%);
+}
+
+/* Page Header & Tabs */
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 20px; background: linear-gradient(135deg, #0a1628 0%, #0d2137 100%); border: 1px solid #1a3a5c; border-radius: 10px; margin-bottom: 20px; }
+.page-header-title { font-size: 26px; font-weight: bold; color: #00e5ff; display: flex; align-items: center; gap: 10px; }
+.page-header-title svg { width: 28px; height: 28px; fill: #00e5ff; }
+.page-header-subtitle { font-size: 13px; color: #b0bec5; margin-top: 5px; }
+.page-header-icon { width: 50px; height: 50px; border: 1px solid #1a5276; border-radius: 10px; display: flex; align-items: center; justify-content: center; background-color: #0d2137; }
+.page-header-icon svg { width: 26px; height: 26px; fill: #00e5ff; }
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab-btn { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background-color: #0d2137; border: 1px solid #1a5276; border-radius: 8px; color: #fff; font-size: 14px; cursor: pointer; transition: all 0.3s; }
+.tab-btn svg { width: 16px; height: 16px; fill: #fff; }
+.tab-btn.active { background-color: #00e5ff; color: #0a1628; border-color: #00e5ff; }
+.tab-btn.active svg { fill: #0a1628; }
+.tab-badge { background-color: #00e5ff; color: #0a1628; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; }
+.tab-btn.active .tab-badge { background-color: #0a1628; color: #00e5ff; }
+
+.panel { background: linear-gradient(135deg, #0a1628 0%, #0d2137 100%); border: 1px solid #1a3a5c; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.panel-title { font-size: 18px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 10px; }
+.panel-title svg { width: 20px; height: 20px; fill: #00e5ff; }
+.key-table { width: 100%; border-collapse: collapse; }
+.key-table th { text-align: left; padding: 12px 15px; font-size: 13px; color: #00e5ff; border-bottom: 1px solid #1a3a5c; }
+.key-table td { padding: 15px; font-size: 13px; border-bottom: 1px solid #1a3a5c; vertical-align: middle; }
+.key-table tr:last-child td { border-bottom: none; }
+.key-value { font-family: monospace; color: #00e5ff; font-weight: bold; font-size: 13px; letter-spacing: 0.5px; }
+.stake-value { font-weight: bold; }
+.fee-value { font-size: 11px; color: #e74c3c; margin-top: 3px; }
+.date-value { display: flex; align-items: center; gap: 6px; color: #b0bec5; font-size: 13px; }
+.date-value svg { width: 14px; height: 14px; fill: #b0bec5; }
+.status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: bold; }
+.status-badge.available { color: #2ecc71; }
+.status-badge.available svg { fill: #2ecc71; }
+.status-badge.redeemed { color: #e74c3c; }
+.status-badge.redeemed svg { fill: #e74c3c; }
+.status-badge svg { width: 14px; height: 14px; }
+.btn-copy { display: inline-flex; align-items: center; gap: 6px; background-color: #00e5ff; color: #0a1628; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+.btn-copy:hover { background-color: #00c4d9; }
+.btn-copy svg { width: 12px; height: 12px; fill: #0a1628; }
+.stats-grid-small { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
+.stat-card-small { background: linear-gradient(135deg, #0a1628 0%, #0d2137 100%); border: 1px solid #1a3a5c; border-radius: 10px; padding: 20px; }
+.stat-card-small-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.stat-card-small-title { font-size: 14px; color: #b0bec5; }
+.stat-card-small-icon svg { width: 20px; height: 20px; fill: #00e5ff; }
+.stat-card-small-value { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+.stat-card-small-desc { font-size: 12px; color: #b0bec5; }
+.stat-card-small.available .stat-card-small-desc { color: #2ecc71; }
+
+.form-label { font-size: 13px; color: #b0bec5; margin-bottom: 8px; display: block; }
+.input-group { display: flex; align-items: center; background-color: #0d2137; border: 1px solid #1a5276; border-radius: 8px; padding: 10px 15px; gap: 10px; }
+.input-group input { flex: 1; background: transparent; border: none; outline: none; color: #fff; font-size: 14px; }
+.input-group input::placeholder { color: #78909c; }
+.btn-max { background-color: #1a3a5c; color: #00e5ff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+.btn-max:hover { background-color: #245a8a; }
+.info-box { background-color: rgba(0, 229, 255, 0.05); border: 1px solid #1a5276; border-radius: 8px; padding: 15px; margin-top: 15px; }
+.info-box-title { font-size: 14px; font-weight: bold; color: #00e5ff; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.info-box-title svg { width: 16px; height: 16px; fill: #00e5ff; }
+.info-box ul { list-style: none; padding: 0; }
+.info-box li { font-size: 13px; color: #b0bec5; margin-bottom: 6px; line-height: 1.5; }
+.info-box li strong { color: #fff; }
+.summary { margin-top: 20px; }
+.summary-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1a3a5c; }
+.summary-row:last-child { border-bottom: none; }
+.summary-label { font-size: 14px; color: #b0bec5; }
+.summary-value { font-size: 14px; font-weight: bold; }
+.summary-value.stake { color: #fff; }
+.summary-value.fee { color: #e74c3c; }
+.summary-value.total { color: #00e5ff; }
+.summary-value.balance { color: #00e5ff; font-family: monospace; }
+.btn-generate { width: 100%; padding: 14px; background-color: #00e5ff; color: #0a1628; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px; transition: all 0.3s; }
+.btn-generate:hover { background-color: #00c4d9; }
+.btn-generate svg { width: 18px; height: 18px; fill: #0a1628; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.page-section { display: none; }
+.page-section.active { display: block; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+
+.redeem-card { background: linear-gradient(135deg, #0a1628 0%, #0d2137 100%); border: 1px solid #1a3a5c; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; min-height: 340px; }
+.redeem-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.redeem-card-title { font-size: 15px; font-weight: bold; }
+.redeem-card-icon { width: 30px; height: 30px; border: 1px solid #1a5276; border-radius: 8px; display: flex; align-items: center; justify-content: center; background-color: #0d2137; }
+.redeem-card-icon svg { width: 16px; height: 16px; fill: #00e5ff; }
+.redeem-input { width: 100%; background-color: #0d2137; border: 1px solid #1a5276; border-radius: 8px; padding: 10px 12px; color: #fff; font-size: 13px; font-family: monospace; letter-spacing: 1px; outline: none; margin-bottom: 12px; transition: border 0.3s; }
+.redeem-input::placeholder { color: #78909c; }
+.redeem-input:focus { border-color: #00e5ff; }
+.btn-redeem { width: 100%; padding: 11px; background-color: #00e5ff; color: #0a1628; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s; }
+.btn-redeem:hover { background-color: #00c4d9; }
+.btn-redeem svg { width: 16px; height: 16px; fill: #0a1628; }
+.btn-redeem.node-active { background-color: #2ecc71; color: #fff; cursor: default; }
+.btn-redeem.node-active:hover { background-color: #2ecc71; }
+.btn-redeem.node-active svg { fill: #fff; }
+.redeem-footer { text-align: center; margin-top: 12px; font-size: 11px; color: #b0bec5; }
+.redeem-footer a { color: #00e5ff; text-decoration: none; cursor: pointer; }
+.redeem-footer a:hover { text-decoration: underline; }
+.redeem-action-wrapper { margin-top: auto; }
+
+.reward-card { background: linear-gradient(135deg, #051428 0%, #0a1e3d 100%); border: 1px solid #1a5276; border-radius: 12px; padding: 18px; box-shadow: 0 0 20px rgba(0, 229, 255, 0.05); display: flex; flex-direction: column; min-height: 340px; }
+.reward-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.reward-card-title { font-size: 15px; font-weight: bold; }
+.reward-card-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+.reward-card-icon svg { width: 20px; height: 20px; fill: #00e5ff; }
+.reward-amount { font-size: 18px; font-weight: bold; color: #00ff88; font-family: 'Courier New', monospace; margin-bottom: 15px; letter-spacing: 0.5px; transition: transform 0.3s ease; text-shadow: 0 0 10px rgba(0, 255, 136, 0.4); }
+.reward-countdown { font-size: 12px; color: #00e5ff; margin-bottom: 12px; }
+.reward-countdown span { font-weight: bold; }
+.btn-claim { width: 100%; padding: 11px; background-color: #00e5ff; color: #0a1628; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s; }
+.btn-claim:hover { background-color: #00c4d9; transform: translateY(-1px); }
+.btn-claim svg { width: 16px; height: 16px; fill: #0a1628; }
+.reward-action-wrapper { margin-top: auto; }
+
+.wallet-card { background: linear-gradient(135deg, #051428 0%, #0a1e3d 100%); border: 1px solid #1a5276; border-radius: 12px; padding: 18px; box-shadow: 0 0 20px rgba(0, 229, 255, 0.05); min-height: 340px; display: flex; flex-direction: column; }
+.wallet-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.wallet-card-title { font-size: 15px; font-weight: bold; }
+.wallet-card-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+.wallet-card-icon svg { width: 20px; height: 20px; fill: #00e5ff; }
+.wallet-subcard { background: linear-gradient(135deg, #0a1e3d 0%, #0d2a4a 100%); border: 1px solid #1a5276; border-radius: 8px; padding: 12px; margin-bottom: 10px; transition: border-color 0.3s; display: flex; flex-direction: column; flex: 1; }
+.wallet-subcard:last-child { margin-bottom: 0; }
+.wallet-subcard:hover { border-color: #00e5ff; }
+.wallet-subcard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.wallet-token-info { display: flex; align-items: center; gap: 8px; }
+.wallet-token-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.wallet-token-icon.usdt { background-color: transparent; padding: 0; }
+.wallet-token-icon.usdt svg { width: 34px; height: 34px; display: block; }
+.wallet-token-icon.bossx { background-color: rgba(0, 229, 255, 0.15); }
+.wallet-token-icon.bossx img { width: 32px; height: 32px; object-fit: contain; }
+.wallet-token-name { font-size: 13px; font-weight: bold; }
+.wallet-token-network { font-size: 10px; color: #2ecc71; }
+.wallet-balance { font-size: 18px; font-weight: bold; font-family: 'Courier New', monospace; margin-top: auto; }
+.wallet-balance .currency { font-size: 12px; color: #b0bec5; margin-left: 4px; }
+
+.validator-card { background: linear-gradient(135deg, #0a1628 0%, #0d2137 100%); border: 1px solid #1a3a5c; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 420px; }
+.validator-card-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding-bottom: 8px; border-bottom: 1px solid #1a3a5c; }
+.validator-title { font-size: 14px; font-weight: bold; color: #f0a500; display: flex; align-items: center; gap: 8px; }
+.validator-title svg { width: 18px; height: 18px; fill: #f0a500; }
+.validator-info-row { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; margin-bottom: 5px; border-bottom: 1px solid rgba(26, 82, 118, 0.4); }
+.validator-info-left { display: flex; flex-direction: column; align-items: flex-start; }
+.validator-info-value { font-size: 14px; font-weight: bold; color: #00ff88; font-family: 'Courier New', monospace; text-shadow: 0 0 8px rgba(0, 255, 136, 0.4); }
+.validator-info-right { display: flex; flex-direction: column; align-items: flex-end; }
+.validator-countdown-value { font-size: 16px; font-weight: bold; color: #00e5ff; font-family: 'Courier New', monospace; letter-spacing: 1px; text-shadow: 0 0 8px rgba(0, 229, 255, 0.4); }
+.vault-container { position: relative; width: 390px; height: 390px; display: flex; align-items: center; justify-content: center; transform-origin: center center; margin-top: 10px; }
+.guide-line { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 195px; background: linear-gradient(to bottom, rgba(240,165,0,0.6), transparent); z-index: 90; pointer-events: none; transition: background 0.5s ease; }
+.guide-line.active { background: linear-gradient(to bottom, rgba(0,255,136,0.6), transparent); }
+.guide-line.click-flash { width: 4px; background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(0,255,136,0.8), transparent); transition: all 0.08s ease-out; }
+.ring { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: transform 1.5s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.5s ease, border-color 0.5s ease; }
+.ring-6 { width: 360px; height: 360px; background: radial-gradient(circle, transparent 42%, #222240 42%, #222240 48%, transparent 48%); border: 2px solid rgba(100, 100, 150, 0.25); }
+.ring-outer { width: 290px; height: 290px; background: radial-gradient(circle, transparent 42%, #1a1a2e 42%, #1a1a2e 48%, transparent 48%); border: 2px solid rgba(100, 100, 150, 0.2); }
+.ring-2 { width: 245px; height: 245px; background: radial-gradient(circle, transparent 42%, #15152a 42%, #15152a 48%, transparent 48%); border: 2px solid rgba(100, 100, 150, 0.15); }
+.ring-3 { width: 205px; height: 205px; background: radial-gradient(circle, transparent 42%, #101025 42%, #101025 48%, transparent 48%); border: 2px solid rgba(100, 100, 150, 0.1); }
+.ring-4 { width: 165px; height: 165px; background: radial-gradient(circle, transparent 42%, #0d0d22 42%, #0d0d22 48%, transparent 48%); border: 2px solid rgba(100, 100, 150, 0.1); }
+.ring-inner { width: 130px; height: 130px; background: radial-gradient(circle, transparent 42%, #0a0a20 42%, #0a0a20 48%, transparent 48%); border: 2px solid rgba(100, 100, 150, 0.1); }
+.ring.running { border-color: rgba(0, 255, 136, 0.4); }
+.ring-6.running { box-shadow: 0 0 35px rgba(0, 255, 136, 0.15), inset 0 0 30px rgba(0, 255, 136, 0.08); }
+.ring-outer.running { box-shadow: 0 0 25px rgba(0, 255, 136, 0.1), inset 0 0 20px rgba(0, 255, 136, 0.05); }
+.ring-2.running { box-shadow: 0 0 20px rgba(0, 255, 136, 0.08); }
+.ring-3.running { box-shadow: 0 0 15px rgba(0, 255, 136, 0.06); }
+.ring-4.running { box-shadow: 0 0 12px rgba(0, 255, 136, 0.05); }
+.ring-inner.running { box-shadow: 0 0 10px rgba(0, 255, 136, 0.05); }
+.ring.click-flash { border-color: rgba(255, 255, 255, 0.9) !important; box-shadow: 0 0 40px rgba(255, 255, 255, 0.5), inset 0 0 30px rgba(0, 255, 136, 0.3) !important; transition: all 0.08s ease-out; }
+.tick { position: absolute; width: 1px; height: 5px; background: rgba(100, 100, 150, 0.3); transform-origin: center; transition: background 0.5s; }
+.ring.running .tick { background: rgba(0, 255, 136, 0.2); }
+.tick.major { width: 2px; height: 8px; background: rgba(100, 100, 150, 0.5); }
+.ring.running .tick.major { background: rgba(0, 255, 136, 0.4); }
+.ring-char { position: absolute; font-size: 12px; font-weight: bold; color: #444466; user-select: none; transition: color 0.5s; letter-spacing: 1px; font-family: 'Courier New', monospace; }
+.ring.running .ring-char { color: rgba(0, 255, 136, 0.7); text-shadow: 0 0 4px rgba(0, 255, 136, 0.3); }
+.ring-char.highlight { color: #ffffff !important; text-shadow: 0 0 8px #00ff88, 0 0 15px rgba(0, 255, 136, 0.6) !important; font-size: 14px; }
+@keyframes spin-cw { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes spin-ccw { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+.ring.running.spin-1 { animation: spin-cw 22s linear infinite; }
+.ring.running.spin-2 { animation: spin-ccw 20s linear infinite; }
+.ring.running.spin-3 { animation: spin-cw 28s linear infinite; }
+.ring.running.spin-4 { animation: spin-ccw 16s linear infinite; }
+.ring.running.spin-5 { animation: spin-cw 24s linear infinite; }
+.ring.running.spin-6 { animation: spin-ccw 12s linear infinite; }
+.center { position: absolute; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, #1a1a2e, #050510); border: 2px solid rgba(100, 100, 150, 0.3); display: flex; align-items: center; justify-content: center; z-index: 50; box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.5); transition: border-color 0.5s, box-shadow 0.5s; }
+.center.running { border-color: rgba(0, 255, 136, 0.5); box-shadow: 0 0 40px rgba(0, 255, 136, 0.2), inset 0 0 20px rgba(0, 255, 136, 0.1); }
+.power-btn { width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(100, 100, 150, 0.4); background: radial-gradient(circle at 30% 30%, #2a2a40, #0a0a1a); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.4s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.05); position: relative; }
+.power-btn:hover { transform: scale(1.05); border-color: rgba(100, 100, 150, 0.7); }
+.power-btn:active { transform: scale(0.95); }
+.power-btn.running { border-color: rgba(0, 255, 136, 0.6); background: radial-gradient(circle at 30% 30%, #0a3a2a, #051510); box-shadow: 0 0 25px rgba(0, 255, 136, 0.4), inset 0 1px 2px rgba(0, 255, 136, 0.2); }
+.power-btn.running:hover { border-color: rgba(0, 255, 136, 0.6); cursor: not-allowed; }
+.power-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+.power-btn:disabled:hover { transform: none; border-color: rgba(100, 100, 150, 0.4); }
+.power-icon { width: 30px; height: 30px; stroke: #555577; stroke-width: 2.5; fill: none; transition: stroke 0.4s, filter 0.4s; }
+.power-btn.running .power-icon { stroke: #00ff88; filter: drop-shadow(0 0 6px #00ff88); }
+
+.toast { position: fixed; bottom: 30px; right: 30px; background-color: #2ecc71; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 1000; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { background-color: #e74c3c; }
+.toast.warning { background-color: #f39c12; }
+
+.log-section { margin-top: 20px; }
+.log-panel { background: linear-gradient(135deg, #051428 0%, #0a1e3d 100%); border: 1px solid #1a5276; border-radius: 12px; overflow: hidden; box-shadow: 0 0 20px rgba(0, 229, 255, 0.05); }
+.log-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: rgba(0, 229, 255, 0.05); border-bottom: 1px solid #1a5276; flex-wrap: wrap; gap: 10px; }
+.log-header-left { display: flex; align-items: center; gap: 15px; }
+.log-title { font-size: 16px; font-weight: bold; color: #00e5ff; }
+.log-counter { background-color: #1a5276; color: #00e5ff; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+.log-header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.log-filter { display: flex; gap: 5px; flex-wrap: wrap; }
+.log-filter-btn { background-color: #0d2137; color: #b0bec5; border: 1px solid #1a5276; padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.3s; }
+.log-filter-btn:hover { background-color: #1a3a5c; }
+.log-filter-btn.active { background-color: #00e5ff; color: #0a1628; border-color: #00e5ff; }
+.log-filter-btn.active[data-filter="SUCCESS"] { background-color: #2ecc71; border-color: #2ecc71; }
+.log-filter-btn.active[data-filter="INFO"] { background-color: #3498db; border-color: #3498db; }
+.log-filter-btn.active[data-filter="WARNING"] { background-color: #f39c12; border-color: #f39c12; }
+.log-filter-btn.active[data-filter="ERROR"] { background-color: #e74c3c; border-color: #e74c3c; }
+.btn-clear-log { background-color: #e74c3c; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+.btn-clear-log:hover { background-color: #c0392b; }
+.btn-reset-state { background-color: #f39c12; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+.btn-reset-state:hover { background-color: #d68910; }
+.log-content { background-color: #050a14; padding: 15px; max-height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; min-height: 100px; }
+.log-content::-webkit-scrollbar { width: 8px; }
+.log-content::-webkit-scrollbar-track { background: #0a1628; border-radius: 4px; }
+.log-content::-webkit-scrollbar-thumb { background: #1a5276; border-radius: 4px; }
+.log-content::-webkit-scrollbar-thumb:hover { background: #2471a3; }
+.log-entry { padding: 8px 12px; margin-bottom: 4px; border-radius: 4px; border-left: 3px solid transparent; }
+.log-entry:last-child { margin-bottom: 0; }
+.log-entry.SUCCESS { background-color: rgba(46, 204, 113, 0.05); border-left-color: #2ecc71; }
+.log-entry.INFO { background-color: rgba(52, 152, 219, 0.05); border-left-color: #3498db; }
+.log-entry.WARNING { background-color: rgba(243, 156, 18, 0.05); border-left-color: #f39c12; }
+.log-entry.ERROR { background-color: rgba(231, 76, 60, 0.05); border-left-color: #e74c3c; }
+.log-timestamp { color: #78909c; margin-right: 8px; font-size: 11px; }
+.log-level { font-weight: bold; margin-right: 8px; font-size: 11px; padding: 2px 8px; border-radius: 3px; }
+.log-level.SUCCESS { color: #2ecc71; background-color: rgba(46, 204, 113, 0.15); }
+.log-level.INFO { color: #3498db; background-color: rgba(52, 152, 219, 0.15); }
+.log-level.WARNING { color: #f39c12; background-color: rgba(243, 156, 18, 0.15); }
+.log-level.ERROR { color: #e74c3c; background-color: rgba(231, 76, 60, 0.15); }
+.log-message { color: #ecf0f1; word-break: break-all; }
+.log-empty { color: #78909c; font-style: italic; text-align: center; padding: 40px 0; }
+
+.system-info-panel { margin-top: 15px; background: linear-gradient(135deg, #051428 0%, #0a1e3d 100%); border: 1px solid #1a5276; border-radius: 12px; padding: 20px; box-shadow: 0 0 20px rgba(0, 229, 255, 0.05); }
+.system-info-title { font-size: 15px; font-weight: bold; color: #00e5ff; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; }
+.system-info-title svg { width: 18px; height: 18px; fill: #00e5ff; }
+.system-info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.system-info-column { display: flex; flex-direction: column; gap: 8px; }
+.system-info-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid rgba(26, 82, 118, 0.3); }
+.system-info-label { color: #b0bec5; font-size: 13px; flex: 1; }
+.system-info-value { font-size: 13px; font-weight: bold; text-align: right; }
+.system-info-value.status-active { color: #2ecc71; }
+.system-info-value.status-inactive { color: #e74c3c; }
+.system-info-value.status-pending { color: #f39c12; }
+.system-info-value.status-time { color: #e74c3c; }
+.system-info-value.status-expired { color: #e74c3c; }
+.system-info-value.status-waiting { color: #f39c12; }
+
+@media (max-width: 1400px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } .system-info-grid { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .dashboard-grid { grid-template-columns: 1fr; } .ticker-label { padding: 0 10px; font-size: 10px; } .ticker-content { margin-left: 140px; } }
+
+/* ========================================= */
+/* CSS: BOSSX AI AGENT */
+/* ========================================= */
+.ai-agent-container { position: fixed; bottom: 30px; left: 30px; z-index: 9999; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+.ai-fab {
+    width: 65px; height: 65px; border-radius: 50%;
+    background: linear-gradient(135deg, #00e5ff 0%, #00b8d4 100%);
+    border: none; cursor: pointer;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.6), 0 4px 10px rgba(0,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+.ai-fab:hover { transform: scale(1.1); box-shadow: 0 0 30px rgba(0, 229, 255, 0.8); }
+.ai-fab svg { width: 35px; height: 35px; fill: #0a1628; }
+.ai-fab::after {
+    content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
+    border-radius: 50%; border: 2px solid rgba(0, 229, 255, 0.3);
+    animation: pulse-ring 2s infinite;
+}
+@keyframes pulse-ring { 0% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+
+.ai-chat-panel {
+    position: absolute; bottom: 80px; left: 0;
+    width: 380px; height: 500px;
+    background: rgba(10, 22, 40, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid #1a5276;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    transform-origin: bottom left;
+}
+.ai-chat-panel.hidden { transform: scale(0); opacity: 0; pointer-events: none; }
+
+.ai-header {
+    padding: 15px 20px;
+    background: linear-gradient(90deg, #1a3a5c 0%, #0d2137 100%);
+    border-bottom: 1px solid #1a5276;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.ai-header-title { font-size: 16px; font-weight: bold; color: #00e5ff; display: flex; align-items: center; gap: 8px; }
+.ai-status { font-size: 11px; color: #2ecc71; display: flex; align-items: center; gap: 5px; }
+.ai-status-dot { width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; }
+
+.ai-messages {
+    flex: 1; padding: 15px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 12px;
+    background-color: #050a14;
+}
+.ai-messages::-webkit-scrollbar { width: 6px; }
+.ai-messages::-webkit-scrollbar-thumb { background: #1a5276; border-radius: 3px; }
+
+.ai-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; animation: slideUp 0.3s ease; white-space: pre-wrap; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.ai-msg.bot {
+    align-self: flex-start;
+    background-color: #1a3a5c;
+    border-bottom-left-radius: 2px;
+    color: #ecf0f1;
+    border-left: 3px solid #00e5ff;
+}
+.ai-msg.user {
+    align-self: flex-end;
+    background-color: #00e5ff;
+    border-bottom-right-radius: 2px;
+    color: #0a1628;
+    font-weight: 500;
+}
+
+.ai-input-area {
+    padding: 12px; border-top: 1px solid #1a5276;
+    display: flex; gap: 8px; background-color: #0d2137;
+}
+.ai-input {
+    flex: 1; background-color: #050a14; border: 1px solid #1a5276;
+    border-radius: 20px; padding: 8px 15px; color: #fff; font-size: 13px; outline: none;
+}
+.ai-input:focus { border-color: #00e5ff; }
+.ai-send-btn {
+    background-color: #00e5ff; color: #0a1628; border: none;
+    border-radius: 50%; width: 36px; height: 36px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+}
+.ai-send-btn:hover { background-color: #00c4d9; }
+.ai-send-btn svg { width: 18px; height: 18px; fill: #0a1628; }
+
+.ai-quick-actions {
+    padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    background-color: #0a1628; border-top: 1px solid rgba(26, 82, 118, 0.5);
+}
+.ai-action-btn {
+    background-color: #1a3a5c; color: #00e5ff; border: 1px solid #1a5276;
+    padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold;
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.ai-action-btn:hover { background-color: #245a8a; border-color: #00e5ff; }
+
+@media (max-width: 500px) {
+    .ai-chat-panel { width: calc(100vw - 40px); left: -10px; bottom: 75px; }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+    <div class="logo">
+        <img src="https://i.ibb.co/qYBkPDH3/Picsart-25-04-01-16-25-47-054.png" alt="BossX Logo" class="logo-img">
+        <div class="logo-text">
+            <span class="brand-name">BossX</span>
+            <span class="brand-subtitle">masternode platform</span>
+        </div>
+    </div>
+    <ul class="menu">
+        <li><a href="#" class="active" id="menu-dashboard" onclick="navigateTo('dashboard', event)"><span class="menu-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></span><span class="menu-text">Dashboard</span></a></li>
+        <li><a href="#" id="menu-accesskey" onclick="navigateTo('accesskey', event)"><span class="menu-icon"><svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg></span><span class="menu-text">Access Key</span></a></li>
+    </ul>
+</div>
+
+<div class="main">
+    <div class="header">
+        <div class="header-left">
+            <button class="toggle-btn" onclick="toggleSidebar()" title="Buka/Tutup Sidebar">☰</button>
+            <div class="clock-container">
+                <div class="clock-time" id="clock-time">00:00:00</div>
+                <div class="clock-date" id="clock-date">Memuat tanggal...</div>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="search-bar">
+                <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" placeholder="Cari cryptocurrency, transaksi...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="market-btn">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                Market Open
+            </button>
+            <button class="notif-btn" title="Notifikasi">
+                <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+                <span class="notif-badge">3</span>
+            </button>
+            <div class="profile">
+                <img src="https://i.ibb.co/qYBkPDH3/Picsart-25-04-01-16-25-47-054.png" alt="Avatar" class="profile-avatar">
+                <div class="profile-info">
+                    <span class="profile-name">Fery Muliawan</span>
+                    <span class="profile-role">Validator: 8055x</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="page-section active" id="page-dashboard">
+            
+            <!-- ========================================= -->
+            <!-- BOSSX SMART BROADCAST TICKER -->
+            <!-- ========================================= -->
+            <div class="bossx-ticker">
+                <div class="ticker-label">
+                    <svg class="ticker-icon" viewBox="0 0 24 24"><path d="M20 4v12l-4-2H8c-2.21 0-4-1.79-4-4s1.79-4 4-4h8c2.21 0 4 1.79 4 4v-6h-2V6h4v-2h-4zM8 12c-1.1 0-2-.9-2-2s.9-2 2-2h8v4H8z"/></svg>
+                    <span>BOSSX NEWS</span>
+                </div>
+                <div class="ticker-content">
+                    <div class="ticker-track">
+                        <!-- SET 1 -->
+                        <span class="ticker-message">📢 Selamat datang di <strong>BossX Masternode Platform</strong> — The Future of Decentralized Validation</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">🌟 Selamat bergabung sebagai Validator Resmi BossX, <strong>Boss Fery Muliawan!</strong> Anda kini bagian dari jaringan elite</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">🔒 Sistem node Anda aktif — Reward berjalan berdasarkan keaktifan Power ON harian Anda</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">🚀 Pertahankan konsistensi aktivasi setiap hari setelah jam <strong>06:01</strong> untuk memaksimalkan reward Anda</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">💎 Auto-Stop terjadi tepat pukul <strong>06:00:00</strong> — Jangan lupa nyalakan kembali Power Dial Anda</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">⚡ Setiap 60 detik, sistem melakukan <strong>Auto-Claim Share</strong> ke Reward Validasi Anda</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">🎯 Target Anda: Konsistensi harian = Reward maksimal. BossX menghargai keaktifan, bukan kepastian</span>
+                        <span class="ticker-separator">✦</span>
+                        <!-- SET 2 (DUPLIKAT UNTUK LOOP SMOOTH) -->
+                        <span class="ticker-message">📢 Selamat datang di <strong>BossX Masternode Platform</strong> — The Future of Decentralized Validation</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">🌟 Selamat bergabung sebagai Validator Resmi BossX, <strong>Boss Fery Muliawan!</strong> Anda kini bagian dari jaringan elite</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">🔒 Sistem node Anda aktif — Reward berjalan berdasarkan keaktifan Power ON harian Anda</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">🚀 Pertahankan konsistensi aktivasi setiap hari setelah jam <strong>06:01</strong> untuk memaksimalkan reward Anda</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">💎 Auto-Stop terjadi tepat pukul <strong>06:00:00</strong> — Jangan lupa nyalakan kembali Power Dial Anda</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">⚡ Setiap 60 detik, sistem melakukan <strong>Auto-Claim Share</strong> ke Reward Validasi Anda</span>
+                        <span class="ticker-separator">✦</span>
+                        <span class="ticker-message">🎯 Target Anda: Konsistensi harian = Reward maksimal. BossX menghargai keaktifan, bukan kepastian</span>
+                        <span class="ticker-separator">✦</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="redeem-card">
+                    <div class="redeem-card-header">
+                        <div class="redeem-card-title">Redeem Access Key</div>
+                        <div class="redeem-card-icon"><svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg></div>
+                    </div>
+                    <div class="redeem-action-wrapper">
+                        <input type="text" class="redeem-input" id="redeemInput" placeholder="REDEEM KEY">
+                        <button class="btn-redeem" id="btnRedeem" onclick="handleRedeem()">
+                            <svg viewBox="0 0 24 24" id="redeemIcon"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                            <span id="redeemText">Redeem Now</span>
+                        </button>
+                        <div class="redeem-footer">Beli di menu "<a onclick="navigateTo('accesskey', event)">Access Key</a>"</div>
+                    </div>
+                </div>
+
+                <div class="validator-card">
+                    <div class="validator-card-header">
+                        <div class="validator-title"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Access Key Running</div>
+                    </div>
+                    <div class="validator-info-row">
+                        <div class="validator-info-left"><div class="validator-info-value" id="runningReward">0.00000000 BossX</div></div>
+                        <div class="validator-info-right"><div class="validator-countdown-value" id="countdownTo6AM">00:00:00</div></div>
+                    </div>
+                    <div class="vault-container" id="vault">
+                        <div class="guide-line" id="guideLine"></div>
+                        <div class="ring ring-6 spin-1" id="ring-0"></div>
+                        <div class="ring ring-outer spin-2" id="ring-1"></div>
+                        <div class="ring ring-2 spin-3" id="ring-2"></div>
+                        <div class="ring ring-3 spin-4" id="ring-3"></div>
+                        <div class="ring ring-4 spin-5" id="ring-4"></div>
+                        <div class="ring ring-inner spin-6" id="ring-5"></div>
+                        <div class="center" id="centerDisplay">
+                            <button class="power-btn" id="powerBtn" onclick="togglePower()" aria-label="Toggle Power" disabled>
+                                <svg class="power-icon" viewBox="0 0 24 24"><path d="M12 2 L12 12" stroke-linecap="round"/><path d="M18.36 6.64 A9 9 0 1 1 5.64 6.64" stroke-linecap="round"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reward-card">
+                    <div class="reward-card-header">
+                        <div class="reward-card-title">Reward Validasi</div>
+                        <div class="reward-card-icon"><svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg></div>
+                    </div>
+                    <div class="reward-amount" id="rewardAmount">0.00000000 BossX</div>
+                    <div class="reward-action-wrapper">
+                        <div class="reward-countdown">Auto claim in: <span id="countdownTimer">60</span>s</div>
+                        <button class="btn-claim" id="btnClaim" onclick="claimToWallet()">
+                            <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                            Claim to Wallet
+                        </button>
+                    </div>
+                </div>
+
+                <div class="wallet-card">
+                    <div class="wallet-card-header">
+                        <div class="wallet-card-title">My Wallet Balance</div>
+                        <div class="wallet-card-icon"><svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
+                    </div>
+                    <div class="wallet-subcard">
+                        <div class="wallet-subcard-header">
+                            <div class="wallet-token-info">
+                                <div class="wallet-token-icon usdt"><svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path fill="#fff" d="M22.91 17.64c0 2.4-3.09 4.22-6.91 4.22s-6.91-1.82-6.91-4.22c0-2.33 2.91-4.11 6.56-4.22v-2.87h-5.1v-2.4h10.9v2.4h-5.1v2.87c3.65.11 6.56 1.89 6.56 4.22zM16 19.5c2.49 0 4.38-.94 4.38-2.1s-1.89-2.1-4.38-2.1-4.38.94-4.38 2.1 1.89 2.1 4.38 2.1z"/></svg></div>
+                                <div class="wallet-token-name">USDT</div>
+                            </div>
+                            <div class="wallet-token-network">TRC20/BEP20</div>
+                        </div>
+                        <div class="wallet-balance">0.00 <span class="currency">USDT</span></div>
+                    </div>
+                    <div class="wallet-subcard">
+                        <div class="wallet-subcard-header">
+                            <div class="wallet-token-info">
+                                <div class="wallet-token-icon bossx"><img src="https://i.ibb.co/qYBkPDH3/Picsart-25-04-01-16-25-47-054.png" alt="BossX Logo"></div>
+                                <div class="wallet-token-name">BOSSX</div>
+                            </div>
+                            <div class="wallet-token-network">Internal Token</div>
+                        </div>
+                        <div class="wallet-balance" id="bossxBalance">1000.00000000 <span class="currency">BossX</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="log-section">
+                <div class="log-panel">
+                    <div class="log-header">
+                        <div class="log-header-left">
+                            <div class="log-title">📋 Log Engine Masternode</div>
+                            <div class="log-counter" id="logCounter">0 logs</div>
+                        </div>
+                        <div class="log-header-actions">
+                            <div class="log-filter">
+                                <button class="log-filter-btn active" data-filter="ALL" onclick="filterLogs('ALL')">All</button>
+                                <button class="log-filter-btn" data-filter="SUCCESS" onclick="filterLogs('SUCCESS')">✓ Success</button>
+                                <button class="log-filter-btn" data-filter="INFO" onclick="filterLogs('INFO')">ℹ Info</button>
+                                <button class="log-filter-btn" data-filter="WARNING" onclick="filterLogs('WARNING')">⚠ Warning</button>
+                                <button class="log-filter-btn" data-filter="ERROR" onclick="filterLogs('ERROR')">✗ Error</button>
+                            </div>
+                            <button class="btn-reset-state" onclick="resetStateForTesting()">🔄 Reset</button>
+                            <button class="btn-clear-log" onclick="clearLog()">🗑 Clear</button>
+                        </div>
+                    </div>
+                    <div class="log-content" id="logContent"><div class="log-empty">Belum ada log aktivitas.</div></div>
+                </div>
+
+                <div class="system-info-panel">
+                    <div class="system-info-title"><svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>Informasi Sistem BossX Validator</div>
+                    <div class="system-info-grid">
+                        <div class="system-info-column">
+                            <div class="system-info-item"><span class="system-info-label">Node Status:</span><span class="system-info-value status-inactive" id="sysNodeStatus">Non-Aktif</span></div>
+                            <div class="system-info-item"><span class="system-info-label">Contract Status:</span><span class="system-info-value status-waiting" id="sysContractStatus">Menunggu Power ON</span></div>
+                            <div class="system-info-item"><span class="system-info-label">Auto Stop:</span><span class="system-info-value">Setiap hari jam 06:00:00</span></div>
+                            <div class="system-info-item"><span class="system-info-label">Auto Claim:</span><span class="system-info-value">Setiap 60 detik (masuk Pending Reward)</span></div>
+                        </div>
+                        <div class="system-info-column">
+                            <div class="system-info-item"><span class="system-info-label">Masa Berlaku Validasi:</span><span class="system-info-value status-time" id="sysContractTime">40.000.000 detik</span></div>
+                            <div class="system-info-item"><span class="system-info-label">Minimal Stake:</span><span class="system-info-value">10 BossX (via Access Key)</span></div>
+                            <div class="system-info-item"><span class="system-info-label">Fee Generate Key:</span><span class="system-info-value">1 BossX</span></div>
+                            <div class="system-info-item"><span class="system-info-label">Claim Reward:</span><span class="system-info-value">Tanpa minimal (kapan saja)</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-section" id="page-accesskey">
+            <div class="page-header">
+                <div>
+                    <div class="page-header-title"><svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>Access Key</div>
+                    <div class="page-header-subtitle">Generate dan kelola Access Key untuk aktivasi node validator</div>
+                </div>
+                <div class="page-header-icon"><svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg></div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" id="btn-generate" onclick="switchTab('generate')"><svg viewBox="0 0 24 24"><path d="M7.5 5.6L10 7 8.6 4.5 10 2 7.5 3.4 5 2l1.4 2.5L5 7zm12 9.8L17 14l1.4 2.5L17 19l2.5-1.4L22 19l-1.4-2.5L22 14zM22 2l-2.5 1.4L17 2l1.4 2.5L17 7l2.5-1.4L22 7l-1.4-2.5zm-7.63 5.29c-.39-.39-1.02-.39-1.41 0L1.29 18.96c-.39.39-.39 1.02 0 1.41l2.34 2.34c.39.39 1.02.39 1.41 0L16.71 11.04c.39-.39.39-1.02 0-1.41l-2.34-2.34z"/></svg>Generate</button>
+                <button class="tab-btn" id="btn-mykeys" onclick="switchTab('mykeys')"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>My Keys<span class="tab-badge" id="key-badge">0</span></button>
+            </div>
+
+            <div class="tab-content active" id="tab-generate">
+                <div class="panel">
+                    <div class="panel-title" style="margin-bottom: 20px;"><svg viewBox="0 0 24 24"><path d="M7.5 5.6L10 7 8.6 4.5 10 2 7.5 3.4 5 2l1.4 2.5L5 7zm12 9.8L17 14l1.4 2.5L17 19l2.5-1.4L22 19l-1.4-2.5L22 14zM22 2l-2.5 1.4L17 2l1.4 2.5L17 7l2.5-1.4L22 7l-1.4-2.5zm-7.63 5.29c-.39-.39-1.02-.39-1.41 0L1.29 18.96c-.39.39-.39 1.02 0 1.41l2.34 2.34c.39.39 1.02.39 1.41 0L16.71 11.04c.39-.39.39-1.02 0-1.41l-2.34-2.34z"/></svg>Generate Access Key</div>
+                    <label class="form-label">Jumlah BossX untuk Stake:</label>
+                    <div class="input-group">
+                        <input type="number" id="stake-input" placeholder="Minimal 10 BossX" min="10" oninput="updateSummary()">
+                        <button class="btn-max" onclick="setMax()">MAX</button>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-box-title"><svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>Informasi</div>
+                        <ul>
+                            <li><strong>Minimal stake:</strong> 10 BossX</li>
+                            <li><strong>Fee transaksi:</strong> 1 BossX (dipotong otomatis)</li>
+                            <li><strong>Format:</strong> 25 karakter (huruf + angka)</li>
+                            <li><strong>Status:</strong> One-time use (hangus setelah redeem)</li>
+                            <li><strong>Cara pakai:</strong> Copy kode → paste di Dashboard → Redeem</li>
+                        </ul>
+                    </div>
+                    <div class="summary">
+                        <div class="summary-row"><span class="summary-label">Jumlah Stake:</span><span class="summary-value stake" id="summary-stake">0.00 BossX</span></div>
+                        <div class="summary-row"><span class="summary-label">Fee:</span><span class="summary-value fee">1.00 BossX</span></div>
+                        <div class="summary-row"><span class="summary-label">Total Terpotong:</span><span class="summary-value total" id="summary-total">1.00 BossX</span></div>
+                        <div class="summary-row"><span class="summary-label">Saldo saat ini:</span><span class="summary-value balance" id="summary-balance">1000.00000000 BossX</span></div>
+                    </div>
+                    <button class="btn-generate" onclick="generateKey()"><svg viewBox="0 0 24 24"><path d="M7.5 5.6L10 7 8.6 4.5 10 2 7.5 3.4 5 2l1.4 2.5L5 7zm12 9.8L17 14l1.4 2.5L17 19l2.5-1.4L22 19l-1.4-2.5L22 14zM22 2l-2.5 1.4L17 2l1.4 2.5L17 7l2.5-1.4L22 7l-1.4-2.5zm-7.63 5.29c-.39-.39-1.02-.39-1.41 0L1.29 18.96c-.39.39-.39 1.02 0 1.41l2.34 2.34c.39.39 1.02.39 1.41 0L16.71 11.04c.39-.39.39-1.02 0-1.41l-2.34-2.34z"/></svg>Generate Access Key</button>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-mykeys">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>History Access Key</div>
+                        <button class="btn-refresh" onclick="refreshKeys()" style="display:flex;align-items:center;gap:6px;background-color:#0d2137;border:1px solid #1a5276;color:#fff;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#fff;"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>Refresh</button>
+                    </div>
+                    <div id="keys-table-container">
+                        <table class="key-table"><thead><tr><th>Access Key</th><th>Stake</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="keys-table-body"></tbody></table>
+                    </div>
+                    <div class="stats-grid-small">
+                        <div class="stat-card-small"><div class="stat-card-small-header"><span class="stat-card-small-title">Total Keys</span><span class="stat-card-small-icon"><svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg></span></div><div class="stat-card-small-value" id="stat-total">0</div><div class="stat-card-small-desc">Access Key dibuat</div></div>
+                        <div class="stat-card-small available"><div class="stat-card-small-header"><span class="stat-card-small-title">Available</span><span class="stat-card-small-icon"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span></div><div class="stat-card-small-value" id="stat-available">0</div><div class="stat-card-small-desc">Belum diredeem</div></div>
+                        <div class="stat-card-small"><div class="stat-card-small-header"><span class="stat-card-small-title">Redeemed</span><span class="stat-card-small-icon"><svg viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg></span></div><div class="stat-card-small-value" id="stat-redeemed">0</div><div class="stat-card-small-desc">Sudah digunakan</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOSSX AI AGENT -->
+<div class="ai-agent-container">
+    <div id="ai-chat-panel" class="ai-chat-panel hidden">
+        <div class="ai-header">
+            <div class="ai-header-title">
+                <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#00e5ff;"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 1 0 7.5 18 2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5"/></svg>
+                BossX AI Agent
+            </div>
+            <div class="ai-status"><div class="ai-status-dot"></div> Online</div>
+        </div>
+        
+        <div id="ai-messages" class="ai-messages"></div>
+
+        <div class="ai-quick-actions">
+            <button class="ai-action-btn" onclick="aiQuickAction('saldo')">💰 Cek Saldo</button>
+            <button class="ai-action-btn" onclick="aiQuickAction('akumulasi')">📊 Akumulasi</button>
+            <button class="ai-action-btn" onclick="aiQuickAction('aktivasi')">⏱️ Aktivasi</button>
+            <button class="ai-action-btn" onclick="aiQuickAction('status')">📈 Status Node</button>
+        </div>
+
+        <div class="ai-input-area">
+            <input type="text" id="ai-input" class="ai-input" placeholder="Tanya BossX AI..." onkeypress="handleAiEnter(event)">
+            <button class="ai-send-btn" onclick="sendAiMessage()">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <button id="ai-fab" class="ai-fab" onclick="toggleAiChat()" title="Tanya BossX AI">
+        <svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 1 0 7.5 18 2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5"/></svg>
+    </button>
+</div>
+
+<div class="toast" id="toast">Berhasil!</div>
+
+<script>
+// ==================== KONFIGURASI ====================
+const CONTRACT_DURATION_SECONDS = 40000000;
+const SECONDS_IN_MONTH = 2592000;
+const MONTHLY_REWARD_PERCENT = 0.15;
+const AUTO_CLAIM_INTERVAL = 60;
+const FIXED_DIFFICULTY = 12000;
+const STORAGE_KEY = 'bossx_masternode_state_final_v4';
+
+let state = {
+    nodeActive: false, powerOn: false, powerOnTimestamp: null,
+    redeemedKey: '', stakeAmount: 0, contractStart: null,
+    bossxBalance: 1000.00000000, currentReward: 0.00000000,
+    rewardValidasi: 0.00000000, countdownSeconds: 60,
+    logs: [], shareCount: 0, totalSharesAccepted: 0,
+    totalSharesRejected: 0, uptimeSeconds: 0, lastSaveTimestamp: null,
+    activationHistory: []
+};
+
+let accessKeys = [];
+let isRunning = false, clickInterval = null, audioCtx = null;
+let animationFrameId = null, startTime = 0, currentLogFilter = 'ALL';
+let systemLogIntervals = [];
+
+const CHAR_POOL = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const CHARS_PER_RING = 24, CLICK_INTERVAL_MS = 60000, TICKS_PER_RING = 60;
+const RING_SPEEDS = [360/22000, -360/20000, 360/28000, -360/16000, 360/24000, -360/12000];
+
+function getRandomNumber(min, max, decimals = 1) { return parseFloat((Math.random() * (max - min) + min).toFixed(decimals)); }
+function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function formatUptime(seconds) {
+    const d = Math.floor(seconds / 86400), h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60), s = seconds % 60;
+    if (d > 0) return `${d}d ${h}h ${m}m ${s}s`;
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+}
+
+function formatDuration(seconds) {
+    const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), s = seconds % 60;
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+}
+
+function getRewardPerSecond() {
+    if (state.stakeAmount <= 0) return 0;
+    return (state.stakeAmount * MONTHLY_REWARD_PERCENT) / SECONDS_IN_MONTH;
+}
+
+function getNextSixAM(timestamp) {
+    const date = new Date(timestamp);
+    date.setHours(6, 0, 0, 0);
+    if (timestamp >= date.getTime()) date.setDate(date.getDate() + 1);
+    return date.getTime();
+}
+
+function formatTimestamp(date) {
+    return date.getFullYear() + '-' +
+        String(date.getMonth() + 1).padStart(2, '0') + '-' +
+        String(date.getDate()).padStart(2, '0') + ' ' +
+        String(date.getHours()).padStart(2, '0') + ':' +
+        String(date.getMinutes()).padStart(2, '0') + ':' +
+        String(date.getSeconds()).padStart(2, '0');
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+
+function updateClock() {
+    const now = new Date();
+    document.getElementById('clock-time').textContent = now.toLocaleTimeString('id-ID', { hour12: false });
+    document.getElementById('clock-date').textContent = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+setInterval(updateClock, 1000); updateClock();
+
+function navigateTo(page, event) {
+    if (event) event.preventDefault();
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar .menu a').forEach(a => a.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('menu-' + page).classList.add('active');
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById('btn-' + tab).classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function setMax() { 
+    const maxStake = Math.floor(state.bossxBalance) - 1;
+    document.getElementById('stake-input').value = Math.max(10, maxStake); 
+    updateSummary(); 
+}
+
+function updateSummary() {
+    const stake = parseFloat(document.getElementById('stake-input').value) || 0;
+    document.getElementById('summary-stake').textContent = stake.toFixed(2) + ' BossX';
+    document.getElementById('summary-total').textContent = (stake + 1).toFixed(2) + ' BossX';
+    document.getElementById('summary-balance').textContent = state.bossxBalance.toFixed(8) + ' BossX';
+}
+
+function generateKey() {
+    const stake = parseFloat(document.getElementById('stake-input').value) || 0;
+    if (stake < 10) { showToast('Minimal stake adalah 10 BossX', 'error'); return; }
+    if (stake + 1 > state.bossxBalance) { showToast('Saldo tidak mencukupi', 'error'); return; }
+    
+    state.bossxBalance -= (stake + 1);
+    updateWalletDisplay(); updateSummary();
+    
+    let key = '';
+    for (let i = 0; i < 25; i++) key += CHAR_POOL.charAt(Math.floor(Math.random() * CHAR_POOL.length));
+    
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+    
+    accessKeys.push({ key: key, stake: stake, fee: 1, date: dateStr, status: 'AVAILABLE' });
+    updateKeysTable(); 
+    document.getElementById('stake-input').value = ''; 
+    updateSummary(); 
+    switchTab('mykeys');
+    saveState();
+    showToast('Access Key berhasil digenerate! Saldo dipotong ' + (stake + 1) + ' BossX');
+}
+
+function updateKeysTable() {
+    const tbody = document.getElementById('keys-table-body'); tbody.innerHTML = '';
+    accessKeys.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        const statusClass = item.status === 'AVAILABLE' ? 'available' : 'redeemed';
+        const statusText = item.status === 'AVAILABLE' ? 'AVAILABLE' : 'REDEEMED';
+        tr.innerHTML = `<td><span class="key-value">${item.key}</span></td><td><div class="stake-value">${item.stake.toFixed(2)} BossX</div><div class="fee-value">Fee: ${item.fee} BossX</div></td><td><div class="date-value"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>${item.date}</div></td><td><span class="status-badge ${statusClass}"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>${statusText}</span></td><td><button class="btn-copy" onclick="copyKey(${index})"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button></td>`;
+        tbody.appendChild(tr);
+    });
+    document.getElementById('stat-total').textContent = accessKeys.length;
+    document.getElementById('stat-available').textContent = accessKeys.filter(k => k.status === 'AVAILABLE').length;
+    document.getElementById('stat-redeemed').textContent = accessKeys.filter(k => k.status === 'REDEEMED').length;
+    document.getElementById('key-badge').textContent = accessKeys.length;
+}
+
+function copyKey(index) {
+    const key = accessKeys[index].key;
+    navigator.clipboard.writeText(key).then(() => showToast('Key berhasil disalin!')).catch(() => {
+        const ta = document.createElement('textarea'); ta.value = key; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showToast('Key berhasil disalin!');
+    });
+}
+
+function refreshKeys() { updateKeysTable(); showToast('Data berhasil diperbarui!'); }
+
+function handleRedeem() {
+    if (state.nodeActive) { showToast('Node sudah aktif. Kontrak masih berjalan.', 'warning'); return; }
+    
+    const keyInput = document.getElementById('redeemInput');
+    const key = keyInput.value.trim();
+    
+    if (!key) { showToast('Masukkan Access Key terlebih dahulu', 'error'); return; }
+    if (key.length !== 25) { showToast('Access Key harus 25 karakter', 'error'); return; }
+    
+    const found = accessKeys.find(k => k.key === key && k.status === 'AVAILABLE');
+    if (!found) { showToast('Access Key tidak valid atau sudah digunakan', 'error'); return; }
+    
+    if (state.contractStart !== null) {
+        const remaining = getRemainingContractTime();
+        if (remaining > 0) { showToast('Kontrak sebelumnya masih berjalan. Tunggu hingga habis.', 'warning'); return; }
+    }
+    
+    found.status = 'REDEEMED';
+    updateKeysTable();
+    
+    state.nodeActive = true;
+    state.redeemedKey = key;
+    state.stakeAmount = found.stake;
+    state.contractStart = null;
+    state.powerOn = false;
+    state.powerOnTimestamp = null;
+    state.currentReward = 0;
+    state.rewardValidasi = 0;
+    state.countdownSeconds = AUTO_CLAIM_INTERVAL;
+    state.shareCount = 0;
+    state.totalSharesAccepted = 0;
+    state.totalSharesRejected = 0;
+    state.uptimeSeconds = 0;
+    state.lastSaveTimestamp = null;
+    state.activationHistory = [];
+    
+    updateRedeemButton(); updateSystemInfo(); updateContractStatus();
+    updateWalletDisplay(); updateRewardDisplay(); updatePowerButton(); updateCountdownDisplay();
+    saveState();
+    
+    addLog('SUCCESS', `Access Key redeemed: ${key} | Node activated with ${found.stake} BossX. Contract will start on first Power ON.`);
+    showToast(`Node diaktivasi! Klik Power Dial untuk memulai kontrak & reward.`);
+    keyInput.value = '';
+}
+
+function updateRedeemButton() {
+    const btn = document.getElementById('btnRedeem');
+    const text = document.getElementById('redeemText');
+    const icon = document.getElementById('redeemIcon');
+    
+    if (state.nodeActive) {
+        btn.classList.add('node-active'); btn.disabled = true;
+        text.textContent = 'Node Aktiv';
+        icon.innerHTML = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>';
+    } else {
+        btn.classList.remove('node-active'); btn.disabled = false;
+        text.textContent = 'Redeem Now';
+        icon.innerHTML = '<path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>';
+    }
+}
+
+function getRemainingContractTime() {
+    if (!state.contractStart) return CONTRACT_DURATION_SECONDS;
+    const elapsed = (Date.now() - state.contractStart) / 1000;
+    return Math.max(0, CONTRACT_DURATION_SECONDS - elapsed);
+}
+
+function formatContractTime(seconds) { return Math.ceil(seconds).toLocaleString('id-ID') + ' detik'; }
+
+function isCurrentTimeBlocked() {
+    const now = new Date();
+    return now.getHours() === 6 && now.getMinutes() === 0 && now.getSeconds() === 0;
+}
+
+function checkAutoStop() {
+    const now = new Date();
+    if (now.getHours() === 6 && now.getMinutes() === 0 && now.getSeconds() === 0) {
+        if (state.powerOn) forcePowerOff('Auto Stop 06:00:00');
+    }
+}
+
+function forcePowerOff(reason) {
+    state.powerOn = false;
+    state.powerOnTimestamp = null;
+    isRunning = false;
+    stopVisuals(); stopAllSystemLogs();
+    addLog('WARNING', `Auto Stop triggered: ${reason}. Power dial turned OFF. You can turn it ON again at 06:00:01.`);
+    showToast(`Sistem auto-stop: ${reason}. Bisa dinyalakan lagi di 06:00:01`, 'warning');
+    updatePowerButton(); updateContractStatus(); saveState();
+}
+
+function stopVisuals() {
+    const btn = document.getElementById('powerBtn');
+    const center = document.getElementById('centerDisplay');
+    const guideLine = document.getElementById('guideLine');
+    const rings = document.querySelectorAll('.ring');
+    
+    btn.classList.remove('running');
+    center.classList.remove('running');
+    guideLine.classList.remove('active');
+    rings.forEach(ring => {
+        ring.classList.remove('running');
+        ring.style.transform = '';
+        ring.querySelectorAll('.ring-char.highlight').forEach(el => el.classList.remove('highlight'));
+    });
+    
+    if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+    stopClickLoop();
+}
+
+function togglePower() {
+    if (state.powerOn) { showToast('Power tidak dapat dimatikan manual. Hanya sistem (06:00:00) yang dapat mematikan.', 'warning'); return; }
+    if (!state.nodeActive) { showToast('Node belum aktif. Redeem Access Key terlebih dahulu.', 'error'); return; }
+    
+    const remaining = getRemainingContractTime();
+    if (remaining <= 0) {
+        showToast('Kontrak sudah habis. Beli Access Key baru.', 'error');
+        state.nodeActive = false; state.contractStart = null;
+        updateRedeemButton(); updateSystemInfo(); updateContractStatus(); saveState();
+        return;
+    }
+    
+    if (isCurrentTimeBlocked()) { showToast('Sistem auto-stop. Silakan coba lagi di 06:00:01', 'warning'); return; }
+    
+    initAudio();
+    
+    state.powerOn = true;
+    state.powerOnTimestamp = Date.now();
+    isRunning = true;
+    
+    const now = new Date();
+    state.activationHistory.push({
+        timestamp: Date.now(),
+        date: now.toDateString(),
+        time: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    });
+    
+    const isFirstPowerOn = !state.contractStart;
+    if (isFirstPowerOn) {
+        state.contractStart = Date.now();
+        addLog('SUCCESS', `Contract timer STARTED: 40.000.000 detik countdown begins.`);
+        showToast('Kontrak dimulai! Hitung mundur 40.000.000 detik berjalan.');
+    }
+    
+    const btn = document.getElementById('powerBtn');
+    const center = document.getElementById('centerDisplay');
+    const guideLine = document.getElementById('guideLine');
+    const rings = document.querySelectorAll('.ring');
+    
+    btn.classList.add('running'); center.classList.add('running');
+    guideLine.classList.add('active');
+    rings.forEach(ring => ring.classList.add('running'));
+    
+    startTime = 0;
+    animationFrameId = requestAnimationFrame(updateHighlights);
+    startClickLoop(); startAllSystemLogs();
+    
+    setTimeout(() => { playMechanicalClick(); triggerClickFlash(); }, 300);
+    if (navigator.vibrate) navigator.vibrate(100);
+    
+    const contractLabel = isFirstPowerOn ? 'Contract STARTED' : 'Contract RESUMED';
+    addLog('INFO', `Power dial ON. ${contractLabel}. Remaining: ${formatContractTime(remaining)}`);
+    showToast('Power Dial aktif! Reward per detik berjalan.');
+    
+    updatePowerButton(); updateContractStatus(); saveState();
+}
+
+function updatePowerButton() {
+    document.getElementById('powerBtn').disabled = !state.nodeActive || state.powerOn;
+}
+
+function updateContractStatus() {
+    const el = document.getElementById('sysContractStatus');
+    if (!el) return;
+    
+    if (!state.nodeActive) { el.textContent = 'Non-Aktif'; el.className = 'system-info-value status-inactive'; }
+    else if (!state.contractStart) { el.textContent = 'Menunggu Power ON'; el.className = 'system-info-value status-waiting'; }
+    else if (state.powerOn) { el.textContent = 'Berjalan (Locked)'; el.className = 'system-info-value status-active'; }
+    else { el.textContent = 'Paused (Auto-Stop)'; el.className = 'system-info-value status-pending'; }
+}
+
+function updateRewardDisplay() { 
+    document.getElementById('rewardAmount').textContent = state.rewardValidasi.toFixed(8) + ' BossX';
+    const runningRewardEl = document.getElementById('runningReward');
+    if (runningRewardEl) runningRewardEl.textContent = state.currentReward.toFixed(8) + ' BossX';
+}
+
+function updateWalletDisplay() { 
+    document.getElementById('bossxBalance').innerHTML = state.bossxBalance.toFixed(8) + ' <span class="currency">BossX</span>';
+    document.getElementById('summary-balance').textContent = state.bossxBalance.toFixed(8) + ' BossX';
+}
+
+function updateCountdownDisplay() { document.getElementById('countdownTimer').textContent = state.countdownSeconds; }
+
+function claimToWallet() {
+    if (state.rewardValidasi <= 0) { showToast('Tidak ada reward untuk di-claim', 'warning'); return; }
+    
+    const claimedAmount = state.rewardValidasi;
+    state.bossxBalance += claimedAmount;
+    state.rewardValidasi = 0;
+    
+    updateRewardDisplay(); updateWalletDisplay(); updateSummary();
+    
+    addLog('SUCCESS', `Claim to Wallet: ${claimedAmount.toFixed(8)} BossX added to balance.`);
+    showToast(`Claim berhasil: ${claimedAmount.toFixed(8)} BossX ditambahkan ke wallet!`);
+    saveState();
+    
+    const rewardEl = document.getElementById('rewardAmount');
+    rewardEl.style.transform = 'scale(1.05)';
+    setTimeout(() => { rewardEl.style.transform = 'scale(1)'; }, 300);
+}
+
+function gameLoop() {
+    const now = new Date();
+    const isAutoStop = isCurrentTimeBlocked();
+    
+    checkAutoStop(); updateCountdownTo6AM(); updateContractDisplay(); updateContractStatus();
+    
+    if (state.powerOn && state.nodeActive) state.uptimeSeconds++;
+    
+    if (state.nodeActive && state.powerOn && !isAutoStop) {
+        const remaining = getRemainingContractTime();
+        
+        if (remaining > 0) {
+            const rewardPerSec = getRewardPerSecond();
+            state.currentReward += rewardPerSec;
+            state.countdownSeconds--;
+            
+            if (state.countdownSeconds <= 0) {
+                state.shareCount++;
+                const shareNumber = String(state.shareCount).padStart(2, '0');
+                const rewardAmount = state.currentReward.toFixed(8);
+                
+                state.rewardValidasi += state.currentReward;
+                addLog('SUCCESS', `Autoclaim accepted share #${shareNumber} (diff: ${FIXED_DIFFICULTY}) - reward: ${rewardAmount} BossX.`);
+                
+                updateShareStatistics(true);
+                
+                state.currentReward = 0;
+                state.countdownSeconds = AUTO_CLAIM_INTERVAL;
+                saveState();
+            }
+            
+            updateRewardDisplay(); updateCountdownDisplay();
+        } else {
+            state.powerOn = false; state.nodeActive = false; state.contractStart = null;
+            isRunning = false; stopVisuals(); stopAllSystemLogs();
+            
+            addLog('ERROR', 'Contract expired (40.000.000 detik habis). Node deactivated permanently. Buy new Access Key to restart.');
+            showToast('Kontrak habis! Node non-aktif. Beli Access Key baru.', 'error');
+            
+            updateRedeemButton(); updatePowerButton(); updateSystemInfo();
+            updateContractStatus(); updateRewardDisplay(); saveState();
+        }
+    }
+    
+    if (now.getSeconds() % 5 === 0) saveState();
+}
+setInterval(gameLoop, 1000);
+
+function updateCountdownTo6AM() {
+    const now = new Date();
+    const target = new Date(now);
+    target.setHours(6, 0, 0, 0);
+    if (now >= target) target.setDate(target.getDate() + 1);
+    const diff = target - now;
+    const h = Math.floor(diff / (1000 * 60 * 60));
+    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const s = Math.floor((diff % (1000 * 60)) / 1000);
+    const el = document.getElementById('countdownTo6AM');
+    if (el) el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function updateContractDisplay() {
+    const remaining = getRemainingContractTime();
+    const el = document.getElementById('sysContractTime');
+    if (el) {
+        if (!state.nodeActive) { el.textContent = '40.000.000 detik (Belum dimulai)'; el.className = 'system-info-value status-waiting'; }
+        else if (remaining <= 0) { el.textContent = '0 detik (EXPIRED)'; el.className = 'system-info-value status-expired'; }
+        else { el.textContent = formatContractTime(remaining); el.className = 'system-info-value status-time'; }
+    }
+}
+
+function updateSystemInfo() {
+    const el = document.getElementById('sysNodeStatus');
+    if (el) {
+        if (state.nodeActive) { el.textContent = 'Aktif'; el.className = 'system-info-value status-active'; }
+        else { el.textContent = 'Non-Aktif'; el.className = 'system-info-value status-inactive'; }
+    }
+}
+
+function addLog(level, message, customTimestamp = null) {
+    const now = customTimestamp || new Date();
+    const timestamp = formatTimestamp(now);
+    
+    state.logs.push({ timestamp, level, message });
+    if (state.logs.length > 2000) state.logs.shift();
+    
+    renderLogs();
+}
+
+function renderLogs() {
+    const container = document.getElementById('logContent');
+    const counter = document.getElementById('logCounter');
+    
+    const totalLogs = state.logs.length;
+    const filteredLogs = currentLogFilter === 'ALL' ? state.logs : state.logs.filter(log => log.level === currentLogFilter);
+    
+    counter.textContent = `${filteredLogs.length} / ${totalLogs} logs`;
+    
+    if (filteredLogs.length === 0) {
+        container.innerHTML = '<div class="log-empty">Tidak ada log yang sesuai dengan filter.</div>';
+        return;
+    }
+    
+    container.innerHTML = filteredLogs.map(log => {
+        return `<div class="log-entry ${log.level}">
+            <span class="log-timestamp">[${log.timestamp}]</span>
+            <span class="log-level ${log.level}">${log.level}</span>
+            <span class="log-message">${log.message}</span>
+        </div>`;
+    }).join('');
+    
+    container.scrollTop = container.scrollHeight;
+}
+
+function filterLogs(level) {
+    currentLogFilter = level;
+    document.querySelectorAll('.log-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.filter === level) btn.classList.add('active');
+    });
+    renderLogs();
+}
+
+function clearLog() {
+    if (!confirm('Hapus semua log?')) return;
+    state.logs = []; state.shareCount = 0;
+    saveState(); renderLogs();
+    showToast('Log berhasil dihapus');
+}
+
+function resetStateForTesting() {
+    if (!confirm('⚠️ Reset semua state untuk testing?')) return;
+    
+    state = {
+        nodeActive: false, powerOn: false, powerOnTimestamp: null,
+        redeemedKey: '', stakeAmount: 0, contractStart: null,
+        bossxBalance: 1000.00000000, currentReward: 0.00000000,
+        rewardValidasi: 0.00000000, countdownSeconds: 60,
+        logs: [], shareCount: 0, totalSharesAccepted: 0,
+        totalSharesRejected: 0, uptimeSeconds: 0, lastSaveTimestamp: null,
+        activationHistory: []
+    };
+    
+    accessKeys = [];
+    if (isRunning) { isRunning = false; stopVisuals(); stopAllSystemLogs(); }
+    
+    document.getElementById('redeemInput').value = '';
+    updateRedeemButton(); updateSystemInfo(); updateContractStatus();
+    updateWalletDisplay(); updateRewardDisplay(); updateCountdownDisplay();
+    updatePowerButton(); updateKeysTable(); updateSummary();
+    
+    saveState(); renderLogs();
+    
+    addLog('INFO', '🔄 State berhasil direset untuk testing.');
+    showToast('State berhasil direset! Saldo dikembalikan ke 1000 BossX.', 'warning');
+}
+
+function showToast(msg, type = 'success') {
+    const toast = document.getElementById('toast'); 
+    toast.textContent = msg; 
+    toast.className = 'toast show';
+    if (type === 'error') toast.classList.add('error');
+    if (type === 'warning') toast.classList.add('warning');
+    setTimeout(() => { toast.className = 'toast'; }, 3000);
+}
+
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playMechanicalClick() {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const clickOsc = audioCtx.createOscillator(); const clickGain = audioCtx.createGain(); const clickFilter = audioCtx.createBiquadFilter();
+    clickOsc.type = 'triangle'; clickOsc.frequency.setValueAtTime(1800, now); clickOsc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+    clickFilter.type = 'bandpass'; clickFilter.frequency.value = 1200; clickFilter.Q.value = 2;
+    clickGain.gain.setValueAtTime(0, now); clickGain.gain.linearRampToValueAtTime(0.4, now + 0.002); clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    clickOsc.connect(clickFilter); clickFilter.connect(clickGain); clickGain.connect(audioCtx.destination);
+    clickOsc.start(now); clickOsc.stop(now + 0.1);
+    const thudOsc = audioCtx.createOscillator(); const thudGain = audioCtx.createGain();
+    thudOsc.type = 'sine'; thudOsc.frequency.setValueAtTime(180, now); thudOsc.frequency.exponentialRampToValueAtTime(60, now + 0.1);
+    thudGain.gain.setValueAtTime(0, now); thudGain.gain.linearRampToValueAtTime(0.3, now + 0.003); thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    thudOsc.connect(thudGain); thudGain.connect(audioCtx.destination); thudOsc.start(now); thudOsc.stop(now + 0.2);
+    const bufferSize = audioCtx.sampleRate * 0.05; const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const noiseData = noiseBuffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) noiseData[i] = (Math.random() * 2 - 1) * 0.5;
+    const noiseSource = audioCtx.createBufferSource(); const noiseGain = audioCtx.createGain(); const noiseFilter = audioCtx.createBiquadFilter();
+    noiseSource.buffer = noiseBuffer; noiseFilter.type = 'highpass'; noiseFilter.frequency.value = 2000;
+    noiseGain.gain.setValueAtTime(0.15, now); noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+    noiseSource.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(audioCtx.destination); noiseSource.start(now);
+}
+
+function triggerClickFlash() {
+    const guideLine = document.getElementById('guideLine'); const rings = document.querySelectorAll('.ring');
+    guideLine.classList.add('click-flash'); rings.forEach(ring => ring.classList.add('click-flash'));
+    setTimeout(() => { guideLine.classList.remove('click-flash'); rings.forEach(ring => ring.classList.remove('click-flash')); }, 150);
+    if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
+}
+
+function startClickLoop() {
+    if (clickInterval) clearInterval(clickInterval);
+    clickInterval = setInterval(() => { if (!isRunning) return; playMechanicalClick(); triggerClickFlash(); }, CLICK_INTERVAL_MS);
+}
+
+function stopClickLoop() { if (clickInterval) { clearInterval(clickInterval); clickInterval = null; } }
+
+function getRandomChars(count) {
+    const shuffled = CHAR_POOL.split('').sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+}
+
+function initRings() {
+    const radii = [170, 135, 112, 92, 72, 55];
+    const tickRadii = [176, 141, 118, 98, 78, 60];
+    for (let r = 0; r < 6; r++) {
+        const ring = document.getElementById(`ring-${r}`);
+        const radius = radii[r], tickRadius = tickRadii[r];
+        const ringChars = getRandomChars(CHARS_PER_RING);
+        
+        for (let i = 0; i < TICKS_PER_RING; i++) {
+            const angle = (i * 360 / TICKS_PER_RING) - 90;
+            const rad = (angle * Math.PI) / 180;
+            const x = Math.cos(rad) * tickRadius, y = Math.sin(rad) * tickRadius;
+            const tick = document.createElement('div');
+            tick.className = `tick ${i % 5 === 0 ? 'major' : ''}`;
+            tick.style.left = `calc(50% + ${x}px - 0.5px)`;
+            tick.style.top = `calc(50% + ${y}px - 3px)`;
+            tick.style.transform = `rotate(${angle + 90}deg)`;
+            ring.appendChild(tick);
+        }
+        for (let i = 0; i < CHARS_PER_RING; i++) {
+            const angle = (i * 360 / CHARS_PER_RING) - 90;
+            const rad = (angle * Math.PI) / 180;
+            const x = Math.cos(rad) * radius, y = Math.sin(rad) * radius;
+            const charEl = document.createElement('div');
+            charEl.className = 'ring-char';
+            charEl.textContent = ringChars[i];
+            charEl.dataset.index = i;
+            charEl.style.left = `calc(50% + ${x}px - 6px)`;
+            charEl.style.top = `calc(50% + ${y}px - 7px)`;
+            ring.appendChild(charEl);
+        }
+    }
+}
+
+function updateHighlights(timestamp) {
+    if (!isRunning) return;
+    if (!startTime) startTime = timestamp;
+    const elapsed = timestamp - startTime;
+    const rings = document.querySelectorAll('.ring');
+    rings.forEach((ring, r) => {
+        const oldHighlight = ring.querySelector('.ring-char.highlight');
+        if (oldHighlight) oldHighlight.classList.remove('highlight');
+        let currentAngle = (elapsed * RING_SPEEDS[r]) % 360;
+        if (currentAngle < 0) currentAngle += 360;
+        const anglePerChar = 360 / CHARS_PER_RING;
+        let rawIndex = -currentAngle / anglePerChar;
+        let highlightIndex = Math.round(rawIndex) % CHARS_PER_RING;
+        if (highlightIndex < 0) highlightIndex += CHARS_PER_RING;
+        const chars = ring.querySelectorAll('.ring-char');
+        if (chars[highlightIndex]) chars[highlightIndex].classList.add('highlight');
+    });
+    animationFrameId = requestAnimationFrame(updateHighlights);
+}
+
+function saveState() {
+    try {
+        state.lastSaveTimestamp = Date.now();
+        const data = { state: state, accessKeys: accessKeys };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) { console.error('Save failed:', e); }
+}
+
+function loadState() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return false;
+        const data = JSON.parse(saved);
+        if (data.state) state = { ...state, ...data.state };
+        if (data.accessKeys) accessKeys = data.accessKeys;
+        return true;
+    } catch (e) { console.error('Load failed:', e); return false; }
+}
+
+function processOfflineState() {
+    if (!state.powerOn || !state.powerOnTimestamp) return;
+
+    const now = Date.now();
+    const nextSixAM = getNextSixAM(state.powerOnTimestamp);
+    const effectiveEndTime = Math.min(now, nextSixAM);
+    const elapsedSeconds = Math.floor((effectiveEndTime - state.powerOnTimestamp) / 1000);
+
+    if (elapsedSeconds <= 0) return;
+
+    const rewardPerSec = getRewardPerSecond();
+    const rewardPerShare = rewardPerSec * AUTO_CLAIM_INTERVAL;
+    
+    const missedShares = Math.floor(elapsedSeconds / AUTO_CLAIM_INTERVAL);
+    const remainingSeconds = elapsedSeconds % AUTO_CLAIM_INTERVAL;
+    
+    const pendingReward = remainingSeconds * rewardPerSec;
+    state.currentReward += pendingReward;
+    
+    let totalOfflineReward = 0;
+    
+    for (let i = 0; i < missedShares; i++) {
+        state.shareCount++;
+        const shareNumber = String(state.shareCount).padStart(2, '0');
+        const shareReward = rewardPerShare;
+        
+        const shareTimestamp = new Date(state.powerOnTimestamp + (i + 1) * AUTO_CLAIM_INTERVAL * 1000);
+        
+        state.logs.push({
+            timestamp: formatTimestamp(shareTimestamp),
+            level: 'SUCCESS',
+            message: `Autoclaim accepted share #${shareNumber} (diff: ${FIXED_DIFFICULTY}) - reward: ${shareReward.toFixed(8)} BossX.`
+        });
+        
+        state.rewardValidasi += shareReward;
+        state.totalSharesAccepted++;
+        totalOfflineReward += shareReward;
+    }
+    
+    if (missedShares > 0) {
+        const restoreTimestamp = new Date(now);
+        state.logs.push({
+            timestamp: formatTimestamp(restoreTimestamp),
+            level: 'INFO',
+            message: `🔄 Session restored: Processed ${missedShares} offline autoclaim(s) from ${formatDuration(elapsedSeconds)} offline period. Total: ${totalOfflineReward.toFixed(8)} BossX added to Reward Validasi.`
+        });
+    }
+    
+    state.countdownSeconds = AUTO_CLAIM_INTERVAL - remainingSeconds;
+    if (state.countdownSeconds <= 0) state.countdownSeconds = AUTO_CLAIM_INTERVAL;
+    
+    if (now >= nextSixAM) {
+        state.powerOn = false;
+        state.powerOnTimestamp = null;
+        isRunning = false;
+        stopVisuals(); stopAllSystemLogs();
+        
+        const autoStopTimestamp = new Date(nextSixAM);
+        state.logs.push({
+            timestamp: formatTimestamp(autoStopTimestamp),
+            level: 'WARNING',
+            message: 'Auto Stop 06:00:00 occurred while offline. Power dial turned OFF. You can turn it ON again at 06:00:01.'
+        });
+        
+        updatePowerButton(); updateContractStatus();
+    } else {
+        state.powerOnTimestamp = now;
+        isRunning = true;
+        
+        const btn = document.getElementById('powerBtn');
+        const center = document.getElementById('centerDisplay');
+        const guideLine = document.getElementById('guideLine');
+        const rings = document.querySelectorAll('.ring');
+        
+        btn.classList.add('running'); center.classList.add('running');
+        guideLine.classList.add('active');
+        rings.forEach(ring => ring.classList.add('running'));
+        
+        startTime = 0;
+        animationFrameId = requestAnimationFrame(updateHighlights);
+        startClickLoop(); startAllSystemLogs();
+        
+        const restoreTimestamp = new Date(now);
+        state.logs.push({
+            timestamp: formatTimestamp(restoreTimestamp),
+            level: 'INFO',
+            message: `🔄 Session restored. Mining continues. Countdown: ${state.countdownSeconds}s`
+        });
+    }
+    
+    saveState();
+    updateRewardDisplay();
+    updateWalletDisplay();
+    updateCountdownDisplay();
+    renderLogs();
+}
+
+function startAllSystemLogs() {
+    stopAllSystemLogs();
+    
+    addLog('SUCCESS', `Connected to pool: stratum+tcp://bossx-pool.masternode.io:3333`);
+    setTimeout(() => addLog('SUCCESS', `Authorized worker: miner_8055x.validator1`), 500);
+    setTimeout(() => addLog('INFO', `New job received: ${generateJobId()} (Pool: BossXpool)`), 1200);
+    
+    const gpuInterval = setInterval(() => {
+        if (!state.powerOn || !state.nodeActive) return;
+        const hashrate = getRandomNumber(47, 51, 1), temp = getRandomInt(74, 80);
+        const fan = getRandomInt(84, 90), power = getRandomInt(215, 225);
+        addLog('INFO', `GPU#0: ${hashrate} MH/s | Temp: ${temp}°C | Fan: ${fan}% | Power: ${power}W`);
+    }, getRandomInt(35000, 55000));
+    systemLogIntervals.push(gpuInterval);
+    
+    const powerInterval = setInterval(() => {
+        if (!state.powerOn || !state.nodeActive) return;
+        const totalPower = getRandomInt(3280, 3380);
+        addLog('INFO', `Power consumption: ${totalPower}W | Efficiency: ${(getRewardPerSecond() * 3600 / (totalPower/1000)).toFixed(4)} MH/kWh`);
+    }, getRandomInt(50000, 80000));
+    systemLogIntervals.push(powerInterval);
+    
+    const latencyInterval = setInterval(() => {
+        if (!state.powerOn || !state.nodeActive) return;
+        const ping = getRandomInt(18, 42);
+        const status = ping < 30 ? 'stable' : ping < 40 ? 'moderate' : 'high';
+        addLog('INFO', `Network latency: ${ping}ms | Status: ${status}`);
+    }, getRandomInt(25000, 45000));
+    systemLogIntervals.push(latencyInterval);
+    
+    const heartbeatInterval = setInterval(() => {
+        if (!state.powerOn || !state.nodeActive) return;
+        addLog('INFO', `Worker heartbeat: miner_8055x.validator1 | Uptime: ${formatUptime(state.uptimeSeconds)} | Status: ACTIVE`);
+    }, 300000);
+    systemLogIntervals.push(heartbeatInterval);
+    
+    const summaryInterval = setInterval(() => {
+        if (!state.powerOn || !state.nodeActive) return;
+        const totalShares = state.totalSharesAccepted + state.totalSharesRejected;
+        const successRate = totalShares > 0 ? ((state.totalSharesAccepted / totalShares) * 100).toFixed(2) : '100.00';
+        const avgHashrate = getRandomNumber(48, 50, 1);
+        
+        addLog('INFO', `===== 1 Hour Summary =====`);
+        addLog('INFO', `Uptime: ${formatUptime(state.uptimeSeconds)}`);
+        addLog('INFO', `Shares submitted: ${totalShares} (accepted: ${state.totalSharesAccepted}, rejected: ${state.totalSharesRejected})`);
+        addLog('INFO', `Success rate: ${successRate}%`);
+        addLog('INFO', `Average hashrate: ${avgHashrate} MH/s`);
+        addLog('INFO', `Reward earned: ${state.rewardValidasi.toFixed(8)} BossX (pending claim)`);
+        addLog('INFO', `==========================`);
+    }, 3600000);
+    systemLogIntervals.push(summaryInterval);
+    
+    const coolingInterval = setInterval(() => {
+        if (!state.powerOn || !state.nodeActive) return;
+        const temp = getRandomInt(72, 78);
+        const status = temp < 75 ? 'optimal' : temp < 78 ? 'stable' : 'warning';
+        addLog('INFO', `Cooling system: ${status} | GPU temp: ${temp}°C | Ambient: ${getRandomInt(22, 26)}°C`);
+    }, getRandomInt(120000, 180000));
+    systemLogIntervals.push(coolingInterval);
+    
+    const jobInterval = setInterval(() => {
+        if (!state.powerOn || !state.nodeActive) return;
+        addLog('INFO', `Job ID changed: ${generateJobId()} (Pool: BossXpool)`);
+    }, getRandomInt(180000, 300000));
+    systemLogIntervals.push(jobInterval);
+}
+
+function stopAllSystemLogs() {
+    systemLogIntervals.forEach(interval => { if (interval) clearInterval(interval); });
+    systemLogIntervals = [];
+}
+
+function generateJobId() {
+    const chars = '0123456789abcdef';
+    let id = '0x';
+    for (let i = 0; i < 16; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
+    return id;
+}
+
+function updateShareStatistics(accepted) {
+    if (accepted) state.totalSharesAccepted++;
+    else state.totalSharesRejected++;
+    
+    if ((state.totalSharesAccepted + state.totalSharesRejected) % 10 === 0) {
+        const total = state.totalSharesAccepted + state.totalSharesRejected;
+        const rate = ((state.totalSharesAccepted / total) * 100).toFixed(2);
+        addLog('INFO', `Share statistics: ${total} total (${state.totalSharesAccepted} accepted, ${state.totalSharesRejected} rejected) | Success rate: ${rate}%`);
+    }
+}
+
+// ==================== BOSSX AI AGENT ====================
+let isAiChatOpen = false;
+let hasGreeted = false;
+
+function toggleAiChat() {
+    const panel = document.getElementById('ai-chat-panel');
+    isAiChatOpen = !isAiChatOpen;
+    
+    if (isAiChatOpen) {
+        panel.classList.remove('hidden');
+        if (!hasGreeted) {
+            setTimeout(() => aiGreet(), 300);
+            hasGreeted = true;
+        }
+        document.getElementById('ai-input').focus();
+    } else {
+        panel.classList.add('hidden');
+    }
+}
+
+function getGreeting() {
+    const hour = new Date().getHours();
+    let timeGreeting = "Selamat pagi";
+    if (hour >= 11 && hour < 15) timeGreeting = "Selamat siang";
+    else if (hour >= 15 && hour < 18) timeGreeting = "Selamat sore";
+    else if (hour >= 18) timeGreeting = "Selamat malam";
+    
+    return `${timeGreeting}, Boss Fery Muliawan. BossX AI Agent siap melayani. Sistem node Anda saat ini berjalan dengan baik. Ada yang bisa saya bantu?`;
+}
+
+function aiGreet() {
+    addAiMessage(getGreeting(), 'bot');
+}
+
+function addAiMessage(text, sender) {
+    const container = document.getElementById('ai-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `ai-msg ${sender}`;
+    msgDiv.textContent = text;
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+}
+
+function handleAiEnter(event) {
+    if (event.key === 'Enter') sendAiMessage();
+}
+
+function sendAiMessage() {
+    const input = document.getElementById('ai-input');
+    const text = input.value.trim();
+    if (!text) return;
+    
+    addAiMessage(text, 'user');
+    input.value = '';
+    
+    setTimeout(() => processAiInput(text), 500);
+}
+
+function processAiInput(text) {
+    const lowerText = text.toLowerCase();
+    
+    if (lowerText.includes('saldo') || lowerText.includes('balance') || lowerText.includes('wallet')) {
+        aiAction('saldo');
+    } else if (lowerText.includes('share') || lowerText.includes('akumulasi') || lowerText.includes('hitung')) {
+        const match = lowerText.match(/\d+/);
+        if (match) {
+            aiAction('akumulasi', parseInt(match[0]));
+        } else {
+            aiAction('akumulasi', state.shareCount);
+        }
+    } else if (lowerText.includes('aktivasi') || lowerText.includes('power on') || lowerText.includes('jam') || lowerText.includes('kapan')) {
+        aiAction('aktivasi');
+    } else if (lowerText.includes('status') || lowerText.includes('node') || lowerText.includes('kontrak') || lowerText.includes('uptime')) {
+        aiAction('status');
+    } else {
+        addAiMessage("Maaf Boss, saya hanya mengerti perintah terkait Saldo, Akumulasi Share, Aktivasi, dan Status Node. Silakan gunakan tombol di bawah.", 'bot');
+    }
+}
+
+function aiQuickAction(action) {
+    let userText = '';
+    if (action === 'saldo') userText = 'Cek Saldo';
+    else if (action === 'akumulasi') userText = 'Akumulasi Real-Time';
+    else if (action === 'aktivasi') userText = 'Aktivasi Hari Ini';
+    else if (action === 'status') userText = 'Status Node';
+    
+    addAiMessage(userText, 'user');
+    setTimeout(() => aiAction(action), 300);
+}
+
+function aiAction(action, param = null) {
+    let response = "";
+    
+    switch(action) {
+        case 'saldo':
+            response = `💰 Laporan Saldo Real-Time:\n\n• Saldo Wallet BossX: ${state.bossxBalance.toFixed(8)} BossX\n• Reward Validasi (Pending): ${state.rewardValidasi.toFixed(8)} BossX\n\nSemua data adalah fakta terkini.`;
+            break;
+            
+        case 'akumulasi':
+            const targetShare = param || state.shareCount;
+            if (targetShare > state.shareCount) {
+                response = `⚠️ Maaf Boss, Share #${targetShare} belum berjalan. Saat ini progress Anda baru di Share #${state.shareCount}. Saya hanya bisa menghitung fakta yang sudah terjadi. Silakan pertahankan keaktifan Anda!`;
+            } else if (state.shareCount === 0) {
+                response = `📊 Belum ada Share yang selesai. Silakan aktifkan Power ON untuk mulai menghasilkan Share.`;
+            } else {
+                const rewardPerShare = getRewardPerSecond() * AUTO_CLAIM_INTERVAL;
+                const total = rewardPerShare * targetShare;
+                response = `📊 Akumulasi Real-Time:\n\nDari Share #01 hingga #${targetShare}, total reward yang sudah terkumpul adalah ${total.toFixed(8)} BossX.`;
+            }
+            break;
+            
+        case 'aktivasi':
+            const today = new Date().toDateString();
+            const todayActivations = state.activationHistory.filter(a => a.date === today);
+            if (todayActivations.length > 0) {
+                const lastActivation = todayActivations[todayActivations.length - 1].time;
+                response = `⏱️ Aktivasi Hari Ini:\n\nAnda melakukan Power ON hari ini pukul ${lastActivation}. Pertahankan konsistensi Anda, Boss!`;
+            } else {
+                response = `⏱️ Aktivasi Hari Ini:\n\nBelum ada catatan Power ON hari ini. Jangan lupa klik Power ON setelah jam 06:01 ya, Boss!`;
+            }
+            break;
+            
+        case 'status':
+            const remaining = getRemainingContractTime();
+            const statusText = state.powerOn ? "Berjalan (Locked)" : (state.nodeActive ? "Paused (Auto-Stop)" : "Non-Aktif");
+            response = `📈 Status Node:\n\n• Status: ${statusText}\n• Sisa Kontrak: ${formatContractTime(remaining)}\n• Uptime Sesi Ini: ${formatUptime(state.uptimeSeconds)}\n• Total Share Tercapai: ${state.shareCount}`;
+            break;
+    }
+    
+    addAiMessage(response, 'bot');
+}
+
+function init() {
+    initRings();
+    
+    const loaded = loadState();
+    
+    if (loaded) {
+        processOfflineState();
+    } else {
+        addLog('INFO', '🚀 BossX Masternode Platform initialized.');
+    }
+    
+    updateSystemInfo(); updateContractStatus();
+    updateWalletDisplay(); updateRewardDisplay();
+    updateCountdownDisplay(); updatePowerButton();
+    updateKeysTable(); updateSummary(); renderLogs();
+    
+    saveState();
+}
+
+init();
+</script>
+
+</body>
+</html>
